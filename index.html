@@ -7,12 +7,16 @@ if(stadium.complete&&stadium.naturalWidth){c.save();c.globalAlpha=.85;c.drawImag
 for(let i=0;i<18;i++){c.strokeStyle='rgba(255,28,76,.065)';c.lineWidth=24;c.beginPath();c.moveTo(i*94-200,0);c.lineTo(i*94+270,1350);c.stroke()}
 bar(0,0,1080,16,'#e6003d');bar(0,1328,1080,22,'#e6003d');
 t('SPIELTAG',56,121,95);bar(56,145,480,9,'#e6003d');
-t('ASK BAUMGARTEN',56,208,42);t('MEISTERSCHAFT',56,258,25,'#ff567c');
-fit('VS. '+$('opp').value.toUpperCase(),56,311,730,35);
-t(($('date').value||'').split('-').reverse().join('.')+'  |  '+$('time').value+' UHR',56,359,28);
-t($('venue').value.toUpperCase(),56,407,28,'#ff5279');
-if(clubLogo.complete&&clubLogo.naturalWidth){let ratio=Math.min(175/clubLogo.width,175/clubLogo.height);let w=clubLogo.width*ratio,h=clubLogo.height*ratio;c.drawImage(clubLogo,880+(175-w)/2,30+(175-h)/2,w,h)}
-if(logo){c.save();c.fillStyle='rgba(255,255,255,.94)';c.beginPath();c.roundRect(850,234,180,180,14);c.fill();let k=Math.min(158/logo.width,158/logo.height),w=logo.width*k,h=logo.height*k;c.drawImage(logo,861+(158-w)/2,245+(158-h)/2,w,h);c.restore()}
+// Heimspiel: ASK links. Auswärtsspiel: ASK rechts.
+const home=$('venue').value==='Heimspiel';
+function crest(im,cx,cy,max){if(!im||!im.complete||!im.naturalWidth)return;let scale=Math.min(max/im.naturalWidth,max/im.naturalHeight);let w=im.naturalWidth*scale,h=im.naturalHeight*scale;c.drawImage(im,cx-w/2,cy-h/2,w,h)}
+const left=home?clubLogo:logo,right=home?logo:clubLogo;
+crest(left,265,280,183);crest(right,815,280,183);
+t(':',517,321,108,'#ffffff',900);
+fit(home?'ASK BAUMGARTEN':$('opp').value.toUpperCase(),83,401,370,30);
+fit(home?$('opp').value.toUpperCase():'ASK BAUMGARTEN',633,401,370,30);
+t(($('date').value||'').split('-').reverse().join('.')+'  |  '+$('time').value+' UHR',335,193,27);
+t($('venue').value.toUpperCase(),447,430,23,'#ff5279');
 bar(55,447,970,5,'#e6003d');t('STARTELF',55,529,77);
 let ss=[...document.querySelectorAll('.start')];
 ss.forEach((sel,i)=>{let y=553+i*62;bar(55,y,595,54,'#f5f2f3');bar(55,y,87,54,'#d70039');let p=sel.value===''?null:players[+sel.value];t(p?String(p[1]):'—',77,y+38,30);fit(p?p[0].toUpperCase():'SPIELER '+(i+1),159,y+38,470,29,'#151319')});

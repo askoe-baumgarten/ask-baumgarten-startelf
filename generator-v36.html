@@ -1,0 +1,123 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ASK Baumgarten | Startelf</title><style>body{margin:0;background:#141216;color:#fff;font:15px system-ui}.wrap{max-width:1200px;margin:auto;padding:18px;display:grid;grid-template-columns:370px 1fr;gap:22px}.box{background:#252229;border-radius:14px;padding:20px}h1{color:#ff3659}h2{margin-top:24px}label{display:block;margin-top:10px}input,select{width:100%;padding:9px;margin-top:4px;box-sizing:border-box;border-radius:5px;border:0}button{background:#d90036;color:white;border:0;border-radius:7px;padding:12px;margin:8px 4px 0 0;cursor:pointer}canvas{width:100%;max-width:550px;display:block;margin:auto}.row{display:grid;grid-template-columns:25px 1fr;gap:6px;align-items:center;margin:5px 0}.note{color:#bbb;font-size:12px}@media(max-width:800px){.wrap{display:block}.box{margin-bottom:15px}}</style><div class="wrap"><section class="box"><h1>🔴⚪ ASK Baumgarten</h1><p>Startelf-Generator · Stadion-Design <strong style="color:#ff6688">Version 36 · Zweites Grafikdesign</strong></p><h2>Spiel</h2><label>Gegner<select id="saved"><option value="">Gegner auswählen</option></select></label><input id="opp" type="hidden" value="UFC Neckenmarkt"><label>Datum<input id="date" type="date" value="2026-10-30"></label><label>Anstoß<input id="time" type="time" value="19:30"></label><label>Spielort<select id="venue"><option>Heimspiel</option><option>Auswärtsspiel</option></select></label><p class="note">Die Vereinswappen werden automatisch aus der festen Gegnerliste geladen.</p><h2>Grafik auswählen</h2><label>Design<select id="design"><option value="stadium">Stadion-Design (klassisch)</option><option value="modern">Rot-Weiß-Design (modern)</option></select></label><label>Grafiktyp<select id="graphicType"><option value="lineup">Startelf</option><option value="preview">Spielankündigung</option><option value="result">Endergebnis</option></select></label><div id="resultFields" style="display:none"><label><strong>Mannschaft für das Endergebnis</strong><select id="resultTeam"><option value="Kampfmannschaft">Kampfmannschaft</option><option value="Reserve">Reserve</option></select></label><label>Tore ASK Baumgarten<input id="goalsAsk" type="number" min="0" max="99" value="0"></label><label>Tore Gegner<input id="goalsOpp" type="number" min="0" max="99" value="0"></label><h3>Halbzeitstand</h3><label>ASK Baumgarten – Halbzeit<input id="halfAsk" type="number" min="0" max="99" placeholder="optional"></label><label>Gegner – Halbzeit<input id="halfOpp" type="number" min="0" max="99" placeholder="optional"></label><h3>Torschützen ASK Baumgarten</h3><div id="scorerRows"></div><button id="addScorer" type="button">+ Torschütze</button><p class="note">Torschütze und Spielminute auswählen. Optional auch Nachspielzeit, z. B. 90+2.</p><label>Zusatztext (optional)<input id="resultNote" maxlength="90" placeholder="z. B. Danke für eure Unterstützung!"></label></div><div id="lineupFields"><label>Mannschaft<select id="team"><option value="Kampfmannschaft">Kampfmannschaft</option><option value="Reserve">Reserve</option></select></label><h2>Startelf</h2><div id="starters"></div><h2>Ersatzspieler</h2><div id="subs"></div><h2>Trainer</h2><input id="coach" value="Marco Cadek"><h2>Aufstellungen speichern</h2><label>Gespeicherte Aufstellung<select id="preset"><option value="">— auswählen —</option></select></label><label>Name der Aufstellung<input id="presetName" placeholder="z. B. Heimspiel gegen Antau"></label><button id="presetSave">Aufstellung speichern</button><button id="presetLoad">Aufstellung laden</button><button id="presetDelete">Aufstellung löschen</button><p class="note">Aufstellungen werden auf diesem Gerät im Browser gespeichert.</p></div><h2>Kaderverwaltung</h2><label>Spieler auswählen<select id="managePlayer"></select></label><label>Spielername<input id="manageName" placeholder="Vor- und Nachname"></label><label>Rückennummer<input id="manageNumber" type="number" min="0" max="99"></label><button id="playerSave" type="button">Spieler hinzufügen / ändern</button><button id="playerRemove" type="button">Spieler entfernen</button><p class="note">Kaderänderungen werden nur in diesem Browser gespeichert. Bereits gespeicherte Aufstellungen können nach dem Entfernen von Spielern Lücken enthalten.</p><h2>Grafik herunterladen</h2><button id="download">PNG · Standard (1080 × 1350)</button><button id="downloadStory">PNG · Instagram Story (1080 × 1920)</button></section><section class="box"><canvas id="canvas" width="1080" height="1350"></canvas></section></div><script>
+const defaultPlayers=[["David Rathmann",1],["Marcel Fischer",21],["David Steinwender",15],["Sebastian Bogner",5],["Jakob Wildt",18],["Luca Hausmann",3],["Ben Koronczai",13],["Nici Freingruber",6],["Bence Sipos",7],["Ante Bezer",10],["Julian Reiter",17],["Jürgen Kalbacher",11],["Jan Weixler",14],["Daniel Fischer",2],["Valentino Lazarevic",8],["Tobias Wutzlhofer",16],["Florian Fischer",12],["Peter Bauer",18],["Manuel Schandl",5],["Mihael Novakovits",7],["Ivan Rotter",11],["Yussuf Akbiyak",15],["Lukas Fischer",9],["Philipp Geisendorfer",13],["Johannes Geisendorfer",8],["Martin Resatz",6],["Jeremy Stefan",3],["Philip Windisch",12]];
+const playerStorageKey='ask-players-v1';
+let players;let inactivePlayers=[];
+try{const saved=JSON.parse(localStorage.getItem(playerStorageKey)||'null');players=Array.isArray(saved?.players)?saved.players:defaultPlayers.map(p=>p.slice());inactivePlayers=Array.isArray(saved?.inactive)?saved.inactive:[]}catch(e){players=defaultPlayers.map(p=>p.slice())}
+function persistPlayers(){localStorage.setItem(playerStorageKey,JSON.stringify({players,inactive:inactivePlayers}))}
+const $=id=>document.getElementById(id),canvas=$('canvas'),c=canvas.getContext('2d');let db=JSON.parse(localStorage.getItem('ask-opponents-v4')||'{}'),logo=null;function playerOptions(){return players.map((p,j)=>p&&!inactivePlayers.includes(j)?'<option value="'+j+'">'+p[1]+' · '+p[0].replaceAll('&','&amp;').replaceAll('<','&lt;')+'</option>':'').join('')}
+function row(target,count,klass){for(let i=0;i<count;i++){let d=document.createElement('div');d.className='row';let sel=document.createElement('select');sel.className=klass;sel.innerHTML='<option value="">— auswählen —</option>'+playerOptions();let n=document.createElement('span');n.textContent=i+1;d.append(n,sel);$(target).append(d);sel.onchange=draw}}
+row('starters',11,'start');row('subs',7,'sub');
+function refreshPlayerSelects(){document.querySelectorAll('.start,.sub,.scorerPlayer').forEach(sel=>{const previous=sel.value;sel.innerHTML='<option value="">— auswählen —</option>'+playerOptions();if(previous&&players[+previous]&&!inactivePlayers.includes(+previous))sel.value=previous});refreshManagePlayers();draw()}
+function refreshManagePlayers(){const sel=$('managePlayer'),old=sel.value;sel.innerHTML='<option value="">Neuen Spieler anlegen</option>'+playerOptions();if(old&&players[+old]&&!inactivePlayers.includes(+old))sel.value=old}
+$('managePlayer').onchange=()=>{let i=$('managePlayer').value,p=i===''?null:players[+i];$('manageName').value=p?p[0]:'';$('manageNumber').value=p?p[1]:''};
+$('playerSave').onclick=()=>{let name=$('manageName').value.trim(),number=Number($('manageNumber').value);if(!name||$('manageNumber').value===''||!Number.isInteger(number)||number<0||number>99){alert('Bitte gültigen Namen und Rückennummer (0–99) eingeben.');return}let i=$('managePlayer').value;if(i===''){players.push([name,number]);i=String(players.length-1)}else players[+i]=[name,number];try{persistPlayers();refreshPlayerSelects();$('managePlayer').value=i;alert('Spieler gespeichert.')}catch(e){alert('Speichern fehlgeschlagen.')}};
+$('playerRemove').onclick=()=>{let i=$('managePlayer').value;if(i===''||!players[+i])return;if(!confirm(players[+i][0]+' aus dem Kader entfernen?'))return;inactivePlayers.push(+i);try{persistPlayers();refreshPlayerSelects();$('managePlayer').value='';$('manageName').value='';$('manageNumber').value=''}catch(e){alert('Speichern fehlgeschlagen.')}};
+function addScorerRow(player='',minute=''){let d=document.createElement('div');d.className='scorerEntry';d.style.cssText='border:1px solid #51424a;border-radius:8px;padding:9px;margin:8px 0';d.innerHTML='<label>Torschütze<select class="scorerPlayer"><option value="">— auswählen —</option>'+playerOptions()+'</select></label><label>Minute<input class="scorerMinute" placeholder="z. B. 23 oder 90+2" maxlength="6"></label><button type="button" class="scorerDelete">Entfernen</button>';d.querySelector('.scorerPlayer').value=player;d.querySelector('.scorerMinute').value=minute;d.querySelector('.scorerDelete').onclick=()=>{d.remove();draw()};$('scorerRows').append(d);d.querySelectorAll('input,select').forEach(el=>{el.addEventListener('change',draw);el.addEventListener('input',draw)})}
+$('addScorer').onclick=()=>{if(document.querySelectorAll('.scorerEntry').length>=8){alert('Maximal 8 Torschützen pro Grafik.');return}addScorerRow();draw()};
+refreshManagePlayers();
+function t(s,x,y,size=28,color='#fff',weight=700){c.fillStyle=color;c.font=weight+' '+size+'px system-ui';c.fillText(s,x,y)}function fit(s,x,y,max,size,color='#fff'){while(size>15){c.font='800 '+size+'px system-ui';if(c.measureText(s).width<=max)break;size--}t(s,x,y,size,color,800)}function bar(x,y,w,h,color){c.fillStyle=color;c.fillRect(x,y,w,h)}let clubLogo=new Image();clubLogo.onload=draw;clubLogo.src='Logo_Neu.png';let stadium=new Image();stadium.onload=draw;stadium.src='assets/stadion.svg';
+function modernDecor(){c.save();c.fillStyle='rgba(255,255,255,.14)';c.beginPath();c.moveTo(0,0);c.lineTo(265,0);c.lineTo(0,380);c.fill();c.beginPath();c.moveTo(1080,1350);c.lineTo(810,1350);c.lineTo(1080,970);c.fill();c.fillStyle='rgba(255,255,255,.92)';c.fillRect(0,22,1080,9);c.fillRect(0,1310,1080,9);c.fillStyle='rgba(255,255,255,.13)';for(let i=0;i<6;i++)c.fillRect(35+i*180,35,3,1250);c.restore()}
+function drawLineup(){let modern=$('design').value==='modern';let g=c.createLinearGradient(0,0,1080,1350);if(modern){g.addColorStop(0,'#e6003d');g.addColorStop(.5,'#910026');g.addColorStop(1,'#27000d')}else{g.addColorStop(0,'#500819');g.addColorStop(.46,'#1a1118');g.addColorStop(1,'#09090d')}c.fillStyle=g;c.fillRect(0,0,1080,1350);if(modern)modernDecor();
+if(!modern&&stadium.complete&&stadium.naturalWidth){c.save();c.globalAlpha=.85;c.drawImage(stadium,0,0,1080,1350);c.restore()}
+for(let i=0;!modern&&i<18;i++){c.strokeStyle='rgba(255,28,76,.065)';c.lineWidth=24;c.beginPath();c.moveTo(i*94-200,0);c.lineTo(i*94+270,1350);c.stroke()}
+bar(0,0,1080,16,'#e6003d');bar(0,1328,1080,22,'#e6003d');
+t('SPIELTAG',56,121,95);bar(56,145,480,9,'#e6003d');
+// Heimspiel: ASK links. Auswärtsspiel: ASK rechts.
+const home=$('venue').value==='Heimspiel';
+function crest(im,cx,cy,max){if(!im||!im.complete||!im.naturalWidth)return;let scale=Math.min(max/im.naturalWidth,max/im.naturalHeight);let w=im.naturalWidth*scale,h=im.naturalHeight*scale;c.drawImage(im,cx-w/2,cy-h/2,w,h)}
+const left=home?clubLogo:logo,right=home?logo:clubLogo;
+crest(left,265,280,home?280:183);crest(right,815,280,home?183:280);
+t(':',517,321,108,'#ffffff',900);
+// Vereinsnamen exakt unter dem Mittelpunkt ihres Wappens zentrieren.
+function centeredClubName(name,cx,maxWidth){let size=30;c.font='800 '+size+'px system-ui';while(size>15&&c.measureText(name).width>maxWidth){size--;c.font='800 '+size+'px system-ui'}c.fillStyle='#ffffff';c.textAlign='center';c.fillText(name,cx,401);c.textAlign='start'}
+centeredClubName(home?'ASK BAUMGARTEN':$('opp').value.toUpperCase(),265,390);
+centeredClubName(home?$('opp').value.toUpperCase():'ASK BAUMGARTEN',815,390);
+t(($('date').value||'').split('-').reverse().join('.')+'  |  '+$('time').value+' UHR',335,193,27);
+t($('venue').value.toUpperCase(),447,430,23,'#ff5279');
+bar(55,447,970,5,'#e6003d');t('STARTELF',55,519,71);fit($('team').value.toUpperCase(),435,519,580,32,'#ff6688');
+let ss=[...document.querySelectorAll('.start')];
+ss.forEach((sel,i)=>{let y=553+i*62;bar(55,y,595,54,'#f5f2f3');bar(55,y,87,54,'#d70039');let p=sel.value===''?null:players[+sel.value];t(p?String(p[1]):'—',77,y+38,30);fit(p?p[0].toUpperCase():'SPIELER '+(i+1),159,y+38,470,29,'#151319')});
+bar(681,553,4,658,'#e6003d');t('ERSATZSPIELER',708,619,31,'#ff5079');
+[...document.querySelectorAll('.sub')].forEach((sel,i)=>{let p=sel.value===''?null:players[+sel.value],y=668+i*62;bar(709,y,312,1,'#984458');fit(p?p[1]+'  '+p[0].toUpperCase():'—',710,y+34,305,23)});
+t('TRAINER',708,1160,30,'#ff5079');fit($('coach').value.toUpperCase(),708,1203,306,28);
+bar(55,1274,970,3,'#e6003d');t('TRADITION  |  LEIDENSCHAFT  |  ZUSAMMENHALT',240,1311,20)}
+
+function renderMatchGraphic(){
+const type=$('graphicType').value;
+if(type==='lineup'){drawLineup();return}
+let modern=$('design').value==='modern';let g=c.createLinearGradient(0,0,1080,1350);if(modern){g.addColorStop(0,'#e6003d');g.addColorStop(.5,'#910026');g.addColorStop(1,'#27000d')}else{g.addColorStop(0,'#52071b');g.addColorStop(.55,'#1a1019');g.addColorStop(1,'#08080d')}c.fillStyle=g;c.fillRect(0,0,1080,1350);if(modern)modernDecor();
+if(!modern&&stadium.complete&&stadium.naturalWidth){c.save();c.globalAlpha=.55;c.drawImage(stadium,0,0,1080,1350);c.restore()}
+for(let i=0;!modern&&i<15;i++){c.strokeStyle='rgba(255,32,82,.055)';c.lineWidth=28;c.beginPath();c.moveTo(i*120-250,0);c.lineTo(i*120+200,1350);c.stroke()}
+bar(0,0,1080,18,'#e6003d');bar(0,1328,1080,22,'#e6003d');
+function centered(text,x,y,size,maxWidth=440,color='#fff'){c.font='900 '+size+'px system-ui';while(size>16&&c.measureText(text).width>maxWidth){size--;c.font='900 '+size+'px system-ui'}c.fillStyle=color;c.textAlign='center';c.fillText(text,x,y);c.textAlign='start'}
+function badge(im,x,y,limit){if(!im||!im.complete||!im.naturalWidth)return;let scale=Math.min(limit/im.naturalWidth,limit/im.naturalHeight);let w=im.naturalWidth*scale,h=im.naturalHeight*scale;c.drawImage(im,x-w/2,y-h/2,w,h)}
+const home=$('venue').value==='Heimspiel',left=home?clubLogo:logo,right=home?logo:clubLogo;
+const opponent=($('opp').value||'GEGNER').toUpperCase();
+centered('ASK BAUMGARTEN',540,115,38,930,'#ff6688');
+bar(275,142,530,7,'#e6003d');
+centered(type==='preview'?'SPIELANKÜNDIGUNG':'ENDERGEBNIS',540,275,78,980);
+if(type==='result')centered($('resultTeam').value.toUpperCase(),540,348,43,920,'#ff6688');
+badge(left,275,520,home?380:260);badge(right,805,520,home?260:380);
+centered(home?'ASK BAUMGARTEN':opponent,275,700,37,445);
+centered(home?opponent:'ASK BAUMGARTEN',805,700,37,445);
+centered(':',540,555,115,110,'#ff6688');
+if(type==='preview'){
+centered('NÄCHSTES SPIEL',540,880,39,800,'#ff6688');
+centered(($('date').value||'').split('-').reverse().join('.'),540,995,64,920);
+centered(($('time').value||'--:--')+' UHR',540,1085,54,920);
+centered($('venue').value.toUpperCase()+'  •  '+$('team').value.toUpperCase(),540,1175,31,950,'#ff6688');
+}else{
+const ask=Math.max(0,Math.min(99,parseInt($('goalsAsk').value,10)||0)),opp=Math.max(0,Math.min(99,parseInt($('goalsOpp').value,10)||0));
+centered(home?ask+'  :  '+opp:opp+'  :  '+ask,540,1020,145,860);
+const halfAsk=$('halfAsk').value,halfOpp=$('halfOpp').value;
+if(halfAsk!==''&&halfOpp!=='')centered('HALBZEIT  '+(home?halfAsk+' : '+halfOpp:halfOpp+' : '+halfAsk),540,1100,31,920,'#ff6688');
+// ASK-Torschützen unter dem eigenen Vereinsnamen; Mehrfachtore zusammenfassen.
+const scorerGroups=new Map();
+document.querySelectorAll('.scorerEntry').forEach(row=>{
+const id=row.querySelector('.scorerPlayer').value,minute=row.querySelector('.scorerMinute').value.trim();
+if(id===''||!players[+id]||!/^\d{1,3}(\+\d{1,2})?$/.test(minute))return;
+if(!scorerGroups.has(id))scorerGroups.set(id,{name:players[+id][0],minutes:[]});
+scorerGroups.get(id).minutes.push(minute+"'");
+});
+if(scorerGroups.size){
+const askX=home?275:805;
+centered('TORSCHÜTZEN',askX,750,23,455,'#ff6688');
+[...scorerGroups.values()].slice(0,8).forEach((scorer,i)=>{
+centered((scorer.name+'  '+scorer.minutes.join(', ')).toUpperCase(),askX,784+i*25,23,455);
+});
+}
+let note=$('resultNote').value.trim();if(note)centered(note.toUpperCase(),540,1238,22,950);
+}
+bar(60,1265,960,3,'#e6003d');
+centered('TRADITION  •  LEIDENSCHAFT  •  ZUSAMMENHALT',540,1305,24,960);
+}
+function draw(){renderMatchGraphic()}
+$('resultTeam').onchange=()=>{$('team').value=$('resultTeam').value;draw()};$('team').addEventListener('change',()=>{$('resultTeam').value=$('team').value;draw()});
+$('graphicType').onchange=()=>{let isLineup=$('graphicType').value==='lineup';if($('graphicType').value==='result')$('resultTeam').value=$('team').value;$('lineupFields').style.display=isLineup?'':'none';$('resultFields').style.display=$('graphicType').value==='result'?'':'none';draw()};
+let shared={};
+async function loadShared(){try{let res=await fetch('gegnerlogos.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);let data=await res.json();shared=data.gegner||{};opts();let desired=$('opp').value;if(shared[desired]){$('saved').value=desired;pick(desired)}else if(Object.keys(shared).length){let first=Object.keys(shared)[0];$('saved').value=first;pick(first)}}catch(err){console.warn('Gegnerliste nicht geladen:',err)}}
+function opts(){let sel=$('saved'),old=sel.value;sel.innerHTML='<option value="">Gegner auswählen</option>';Object.keys(shared).sort((a,b)=>a.localeCompare(b,'de')).forEach(n=>sel.add(new Option(n,n)));sel.value=shared[old]?old:''}
+function pick(n){$('opp').value=n||'';logo=null;let path=shared[n];if(path){let im=new Image();im.onload=()=>{if($('saved').value===n){logo=im;draw()}};im.onerror=()=>{console.warn('Gegnerlogo fehlt:',path);draw()};im.src=path}else draw()}
+$('saved').onchange=e=>pick(e.target.value);
+$('download').onclick=()=>{draw();let a=document.createElement('a');a.download='ASK_Baumgarten_'+({lineup:'Startelf',preview:'Spielankuendigung',result:'Endergebnis'}[$('graphicType').value])+'.png';a.href=canvas.toDataURL('image/png');a.click()};
+// Gespeicherte Aufstellungen: ausschließlich Daten, keine Bilder oder Dateiuploads.
+const presetKey='ask-lineups-v1';
+function getPresets(){try{return JSON.parse(localStorage.getItem(presetKey)||'{}')}catch(e){return {}}}
+function presetOptions(){let sel=$('preset'),old=sel.value;sel.innerHTML='<option value="">— auswählen —</option>';Object.keys(getPresets()).sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>sel.add(new Option(name,name)));if(getPresets()[old])sel.value=old}
+function captureLineup(){return {opponent:$('opp').value,saved:$('saved').value,date:$('date').value,time:$('time').value,venue:$('venue').value,team:$('team').value,coach:$('coach').value,starters:[...document.querySelectorAll('.start')].map(x=>x.value),subs:[...document.querySelectorAll('.sub')].map(x=>x.value)}}
+$('presetSave').onclick=()=>{let name=$('presetName').value.trim();if(!name){alert('Bitte einen Namen für die Aufstellung eingeben.');return}let data=getPresets();data[name]=captureLineup();try{localStorage.setItem(presetKey,JSON.stringify(data));presetOptions();$('preset').value=name;alert('Aufstellung gespeichert: '+name)}catch(e){alert('Speichern nicht möglich: Browserspeicher voll oder deaktiviert.')}};
+$('presetLoad').onclick=()=>{let name=$('preset').value,data=getPresets()[name];if(!data){alert('Bitte eine gespeicherte Aufstellung auswählen.');return}
+['date','time','venue','team','coach'].forEach(id=>{if(data[id]!=null)$ (id).value=data[id]});
+[...document.querySelectorAll('.start')].forEach((el,i)=>{el.value=data.starters?.[i]??''});
+[...document.querySelectorAll('.sub')].forEach((el,i)=>{el.value=data.subs?.[i]??''});
+$('presetName').value=name;
+let opponent=shared[data.saved]?data.saved:data.opponent;
+if(shared[opponent]){$('saved').value=opponent;pick(opponent)}else{$('saved').value='';$('opp').value='';logo=null;draw()}
+};
+$('presetDelete').onclick=()=>{let name=$('preset').value;if(!name)return;if(!confirm('Aufstellung "'+name+'" wirklich löschen?'))return;let data=getPresets();delete data[name];localStorage.setItem(presetKey,JSON.stringify(data));presetOptions();$('presetName').value=''};
+$('preset').onchange=()=>{$('presetName').value=$('preset').value};
+// Story-Grafik: Standardgrafik bleibt unverändert; Story hat zusätzliche Hintergrundfläche.
+$('downloadStory').onclick=()=>{draw();let story=document.createElement('canvas');story.width=1080;story.height=1920;let ctx=story.getContext('2d');let bg=ctx.createLinearGradient(0,0,0,1920);if($('design').value==='modern'){bg.addColorStop(0,'#e6003d');bg.addColorStop(.5,'#760020');bg.addColorStop(1,'#28000c')}else{bg.addColorStop(0,'#310718');bg.addColorStop(.5,'#09080d');bg.addColorStop(1,'#350719')}ctx.fillStyle=bg;ctx.fillRect(0,0,1080,1920);ctx.fillStyle='#e6003d';ctx.fillRect(0,0,1080,18);ctx.fillRect(0,1902,1080,18);ctx.drawImage(canvas,0,285,1080,1350);ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font='900 65px system-ui';ctx.fillText('ASK BAUMGARTEN',540,186);ctx.font='700 29px system-ui';ctx.fillStyle='#ff6688';ctx.fillText('SPIELTAG  •  STARTELF',540,236);ctx.fillStyle='#ffffff';ctx.font='700 30px system-ui';ctx.fillText('TRADITION  •  LEIDENSCHAFT  •  ZUSAMMENHALT',540,1745);let a=document.createElement('a');a.download='ASK_Baumgarten_'+({lineup:'Startelf',preview:'Spielankuendigung',result:'Endergebnis'}[$('graphicType').value])+'_Story_1080x1920.png';a.href=story.toDataURL('image/png');a.click()};
+presetOptions();
+
+document.querySelectorAll('input,select').forEach(el=>{el.addEventListener('change',draw);el.addEventListener('input',draw)});opts();draw();loadShared();</script></html>

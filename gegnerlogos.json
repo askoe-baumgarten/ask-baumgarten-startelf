@@ -1,6 +1,18 @@
 {
   "gegner": {
     "SV Antau": "gegnerlogos/Antau.jpeg",
-    "ASKÖ Raiding": "gegnerlogos/ASK%C3%96%20Raiding.png"
+    "ASKÖ Raiding": "gegnerlogos/ASK%C3%96%20Raiding.png",
+    "SC Unterfrauenhaid": "gegnerlogos/SC%20Unterfrauenhaid.png",
+    "SC Unterpullendorf": "gegnerlogos/SC%20Unterpullendorf.png",
+    "SPG Nikitsch - Kr. Minihof": "gegnerlogos/SPG%20Nikitsch.png",
+    "SPG Rabnitztal": "gegnerlogos/SPG%20Rabnitztal.png",
+    "SV Loipersbach": "gegnerlogos/SV%20Loipersbach.jpeg",
+    "UFC Mannersdorf": "gegnerlogos/UFC%20Mannersdorf.png",
+    "UFC Neckenmarkt": "gegnerlogos/UFC%20Neckenmarkt.png",
+    "ASKÖ Stoob": "gegnerlogos/ASK%C3%96%20Stoob.jpeg",
+    "ASKÖ Tschurndorf-Kalkgruben": "gegnerlogos/ASK%C3%96%20Tschurndorf.png",
+    "SPG HRVATI": "gegnerlogos/Hrvati.png",
+    "SC Kr. Geresdorf": "gegnerlogos/Kroatisch%20Geresdorf.png",
+    "SC Dörfl": "gegnerlogos/SC%20D%C3%B6rfl.png"
   }
 }
